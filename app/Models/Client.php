@@ -33,6 +33,10 @@ class Client extends Model
         return $this->belongsTo(User::class, 'id');
     }
 
+public function customPromotion()
+{
+    return $this->hasOne(CustomPromotion::class);
+}
 
 
 }

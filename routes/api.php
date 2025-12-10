@@ -23,6 +23,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SeedAllController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromationController;
+use App\Http\Controllers\InfluencerController;
 // Middleware
 //use App\Http\Middleware\CheckProfileCompletion;
 
@@ -63,15 +64,26 @@ Route::post('auth/register', [RegisterController::class, 'register']);
 // protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/complete-profile', [ProfileController::class, 'completeProfile']);
+        Route::post('auth/update-verification', [ProfileController::class, 'updateVerificationStatus']);
+    Route::post('auth/assign-categories', [ProfileController::class, 'assignCategories']);
+    Route::post('auth/add-social-media-links', [ProfileController::class, 'addSocialMediaLinks']);
 // Route::post('/add/promation', [PromationController::class, 'createPromotion']);
+//updateVerificationStatus
 
 });
+    Route::get('get-categories-by-influencer', [ProfileController::class, 'getCategoriesByInfluencer']);
+    Route::get('get-social-media-links-by-influencer', [ProfileController::class, 'getSocialMediaLinksByInfluencer']);
+
 Route::post('debug', function () {
     return 'API WORKING';
 });
-//a test route
-//Route::get('add/promation', [PromationController::class, 'testMethod']);
+Route::get('get/influencers',[InfluencerController::class,'getInfluencers']);
+Route::post('auth/complete-influencer-profile',[ProfileController::class,'completeInfluencer']);
+Route::get('update/promation', [PromationController::class, 'updatePromotion']);
 Route::post('add/promation', [PromationController::class, 'createPromotion']);
+Route::post('get/promation', [PromationController::class, 'getPromotionsByClient']);
+Route::post('get/promation-by-status', [PromationController::class, 'getPromotionsByStatus']);
+Route::get('get/last-promotion-by-influencer', [PromationController::class, 'getLastPromotionByInfluencer']);
 
 
 Route::prefix('seed')->group(function () {
@@ -93,15 +105,21 @@ Route::prefix('seed')->group(function () {
 
     Route::get('/add/type-user', [SeedAllController::class, 'addTypeOfUser']);
     Route::get('/get/type-user', [SeedAllController::class, 'allTypeOfUser']);
+    Route::get('/get/user-type', [SeedAllController::class, 'getUserType']);
 
     Route::get('/add/category', [SeedAllController::class, 'addCategory']);
     Route::get('/get/category', [SeedAllController::class, 'allCategory']);
+    Route::get('/get/influencer-category', [SeedAllController::class, 'getInfluencersByCategory']);
+    Route::get('/get/influencers', [SeedAllController::class, 'getAllInfluencers']);
+    Route::get('/get/influencer', [SeedAllController::class, 'getInfluencerById']);
 
     Route::get('/add/social-media-promation-type', [SeedAllController::class, 'addSocialMediaPromationType']);
     Route::get('/get/social-media-promation-type', [SeedAllController::class, 'allSocialMediaPromationType']);
 
     Route::get('/add/type-of-social-media-promation', [SeedAllController::class, 'addTypeOfSocialMediaPromation']);
     Route::get('/get/type-of-social-media-promation', [SeedAllController::class, 'allTypeOfSocialMediaPromation']);
+    Route::get('/add/custom-promotion', [SeedAllController::class, 'addCustomPromotion']);
+    Route::get('/get/custom-promotion', [SeedAllController::class, 'getCustomPromotion']);
 });
 
 

@@ -51,8 +51,12 @@ class RegisterController extends Controller
                 'token'   => $token,
                 'needs_profile_completion' => true,
                 'user' => [
-                    'id' => $user->id,
-                    'type_id' => $user->type_id,
+         'id'       => $user->id,
+        'type_id'  => $user->type_id,
+        'name'     => $user->name,
+        'email'    => $user->email,
+        'created_at' => $user->created_at,
+        'updated_at' => $user->updated_at,              
                 ],
             ]);
         } catch (\Throwable $e) {

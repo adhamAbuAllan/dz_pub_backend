@@ -6,14 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Recommendation extends Model
 {
-    /*
-            $table->id();
-            $table->string('text',512);
-            //promation_id
-            $table->foreignId('promation_id')
-                  ->constrained('promations')
-                  ->cascadeOnDelete();
-    */
+
     // The table associated with the model.
     protected $table = 'recommendations';
     protected $fillable = [
@@ -26,8 +19,8 @@ class Recommendation extends Model
     {
         return $this->belongsTo(Promation::class);
     }
-    
-    
+
+
 
 
 

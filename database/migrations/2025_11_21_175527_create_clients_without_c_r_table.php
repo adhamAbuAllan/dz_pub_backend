@@ -17,7 +17,6 @@ return new class extends Migration
                   ->constrained('clients')
                   ->cascadeOnDelete();
                   //name
-            $table->string('name',50);
             //nickname
             $table->string('nickname',30);
             //identity_image

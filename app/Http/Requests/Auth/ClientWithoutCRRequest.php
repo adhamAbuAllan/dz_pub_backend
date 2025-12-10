@@ -17,7 +17,6 @@ class ClientWithoutCRRequest extends FormRequest
     public function rules()
     {
         return [
-        //     'name' => 'required|string|max:255',
         //     'nickname' => 'required|string|max:100',
         //     'identity_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
@@ -26,7 +25,7 @@ class ClientWithoutCRRequest extends FormRequest
     public function messages()
     {
         // use centralized helper
-        return ValidationMessages::requiredMessages('clients_without_cr', ['name', 'nickname']);
+        return ValidationMessages::requiredMessages('clients_without_cr', [ 'nickname']);
     }
 
     protected function failedValidation(Validator $validator)

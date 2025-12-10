@@ -16,7 +16,7 @@ class UserInfoRequest extends FormRequest
     public function rules()
     {
         return [
-               'phone_number' => 'nullable|string|max:20',
+               'phone_number' => 'required|string|max:20',
             'identity_number' => 'nullable|string|max:50',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_verified' => 'nullable|in:yes,no',

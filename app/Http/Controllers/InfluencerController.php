@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Influencer;
 
 class InfluencerController extends Controller
 {
@@ -14,6 +15,23 @@ class InfluencerController extends Controller
     {
         //
     }
+    public function getInfluencers()
+{
+    $influencers = Influencer::
+    // with([
+    //     'categories',
+    //     'socialMedias',
+    //     'user',
+    //     'typeOfInfluencer'
+    // ])->
+    get();
+
+    return response()->json([
+        'status' => true,
+        'data' => $influencers
+    ]);
+}
+
 
     /**
      * Show the form for creating a new resource.

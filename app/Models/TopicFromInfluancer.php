@@ -8,7 +8,7 @@ class TopicFromInfluancer extends Model
 {
     protected $table = 'topic_from_influancers';
 
-    
+
 
     protected $fillable = [
         'have_smaple',

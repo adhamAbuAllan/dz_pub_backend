@@ -16,6 +16,7 @@ class ClientWithCR extends Model
         'institution_address',
         'rc_number',
         'nis_number',
+        'nif_number',
         'iban',
         'image_of_license',
     ];
@@ -25,6 +26,7 @@ class ClientWithCR extends Model
     protected $casts = [
         'rc_number' => 'encrypted',
         'nis_number' => 'encrypted',
+        'nif_number' => 'encrypted',            
         'iban' => 'encrypted',
         'image_of_license' => 'encrypted'
     ];

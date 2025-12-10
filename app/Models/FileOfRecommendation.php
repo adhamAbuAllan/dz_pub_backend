@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class FileOfRecommendation extends Model
 {
-    // The table associated with the model. 
+    // The table associated with the model.
     protected $table = 'files_of_recommendations';
     protected $fillable = [
         'recommendation_id',
@@ -19,7 +19,7 @@ class FileOfRecommendation extends Model
     {
         return $this->belongsTo(Recommendation::class);
     }
-    
-    
-    
+
+
+
 }

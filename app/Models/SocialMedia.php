@@ -14,7 +14,11 @@ class SocialMedia extends Model
    //belongsToMany
     public function influencers()
     {
-        return $this->belongsToMany(Influencer::class, 'social_media_of_influencers', 'social_media_id', 'influencer_id');
+        return $this->belongsToMany(
+            Influencer::class,
+            'social_meida_of_influencers',
+             'social_media_id',
+             'influencer_id');
     }
 
 

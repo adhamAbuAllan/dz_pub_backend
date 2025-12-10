@@ -10,7 +10,6 @@ class ClientWithoutCR extends Model
     protected $table = 'clients_without_cr';
     protected $fillable = [
         'client_id',
-        'name',
         'nickname',
         'identity_image',
     ];

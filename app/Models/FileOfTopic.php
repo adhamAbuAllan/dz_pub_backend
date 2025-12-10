@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FileOfTopic extends Model
 {
     // The table associated with the model.
-    protected $table = 'files_of_topics';
+    protected $table = 'file_of_topics';
     protected $fillable = [
         'promation_id',
         'file_path',
@@ -20,6 +20,6 @@ class FileOfTopic extends Model
     {
         return $this->belongsTo(Promation::class);
     }
-    
-    
+
+
 }

@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('user_infos', function (Blueprint $table) {
             $table->id();
-            $table->string('phone_number',15)->nullable();
+            $table->string('phone_number',15);
             //idientity_number
             // unique
-            $table->string('identity_number',20)->nullable()->unique();
+            $table->text('identity_number')->nullable();
             //profile_image
             $table->string('profile_image',100)->nullable();
             $table->string('is_verified',3)->default('no');//yes/no

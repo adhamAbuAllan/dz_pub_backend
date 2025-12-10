@@ -30,7 +30,6 @@ class PromotionBaseRequest extends FormRequest
             'social_media_types'        => 'required|array',
             'social_media_types.*'      => 'exists:social_media_promation_types,id',
             'file_of_topics'            => 'nullable|array',
-            'file_of_topics.*'          => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
         ];
     }
 

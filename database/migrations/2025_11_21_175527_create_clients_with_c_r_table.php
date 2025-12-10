@@ -25,13 +25,14 @@ return new class extends Migration
             //institution_address
             $table->string('institution_address',100);
             //rc_number unique
-            $table->string('rc_number',30)->unique();
+            $table->text('rc_number');
             //nis number
-            $table->string('nis_number',30);
+            $table->text('nis_number');
+            $table ->text('nif_number');
             //iban unique
-            $table->string('iban',34)->unique();
+            $table->text('iban');
             //image_of_license
-            $table->string('image_of_license',255);
+            $table->text('image_of_license');
             $table->timestamps();
         });
     }

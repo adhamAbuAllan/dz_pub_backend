@@ -20,6 +20,7 @@ use App\Http\MyTrait\ResTrait;
 use App\Helpers\StoreFileIfPresent;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use App\Models\SocialMeidaOfInfluencer;
 
 
 class ProfileController extends Controller
@@ -41,29 +42,36 @@ class ProfileController extends Controller
      * User info fields (phone, identity, profile_image, is_verified) handled by UserInfoRequest.
      */
     public function completeProfile(Request $request)
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
 
-        if (! $user) {
-            return $this->fail('Unauthenticated');
-        }
-
-        if ($user->type_id === 1) {
-            // client
-            $clientMeta = $user->client; // assumes User has client() relation
-            if (! $clientMeta) {
-                return $this->fail('Client meta not found for user');
-            }
-
-            if ($clientMeta->is_have_cr === 'yes') {
-                return $this->completeClientWithCr($request, $user);
-            } else {
-                return $this->completeClientWithoutCr($request, $user);
-            }
-        } else {
-            return $this->completeInfluencer($request, $user);
-        }
+    if (! $user) {
+        return $this->fail('Unauthenticated');
     }
+
+    // update is_have_cr from request
+    if ($request->has('is_have_cr')) {
+        $user->client->update([
+            'is_have_cr' => $request->is_have_cr,
+        ]);
+    }
+
+    if ($user->type_id === 1) {
+        $clientMeta = $user->client;
+        if (! $clientMeta) {
+            return $this->fail('Client meta not found for user');
+        }
+
+        if ($clientMeta->is_have_cr === 'yes') {
+            return $this->completeClientWithCr($request, $user);
+        } else {
+            return $this->completeClientWithoutCr($request, $user);
+        }
+    } else {
+        return $this->completeInfluencer($request, $user);
+    }
+}
+
 
     protected function storeFileIfPresent($file, $folder = 'uploads')
     {
@@ -100,6 +108,7 @@ class ProfileController extends Controller
                 'institution_address' => $request->institution_address,
                 'rc_number' => $request->rc_number,
                 'nis_number' => $request->nis_number,
+                'nif_number' => $request->nif_number,
                 'iban' => $request->iban,
                 'image_of_license' => $imagePath,
             ];
@@ -113,7 +122,9 @@ class ProfileController extends Controller
             }
 
             DB::commit();
-            return $this->success(['message' => 'Client profile (with CR) completed']);
+            return $this->success(['message' => 'Client profile (with CR) completed',
+        'client_with_cr' => $data
+        ]);
         } catch (\Throwable $e) {
             DB::rollBack();
             return $this->fail($e->getMessage());
@@ -135,7 +146,6 @@ class ProfileController extends Controller
 
             $data = [
                 'client_id' => $user->id,
-                'name' => $request->name,
                 'nickname' => $request->nickname,
                 'identity_image' => $identityPath,
             ];
@@ -147,7 +157,9 @@ class ProfileController extends Controller
             }
 
             DB::commit();
-            return $this->success(['message' => 'Client profile (without CR) completed']);
+            return $this->success(['message' => 'Client profile (without CR) completed',
+
+        'client_without_cr' => $data]);
         } catch (\Throwable $e) {
             DB::rollBack();
             return $this->fail($e->getMessage());
@@ -162,10 +174,9 @@ class ProfileController extends Controller
 
         $validated = $request->validate(array_merge($influencerRules, $userInfoRules, [
             // Accept arrays for pivot attachments
-            'category_ids' => 'nullable|array',
-            'category_ids.*' => 'exists:categories,id',
-            'social_media_ids' => 'nullable|array',
-            'social_media_ids.*' => 'exists:social_media,id',
+
+
+
         ]));
 
         DB::beginTransaction();
@@ -191,20 +202,15 @@ class ProfileController extends Controller
             }
             $influencer->save();
 
-            // attach categories and social media (sync to allow replace)
-            if ($request->has('category_ids')) {
-                $influencer->categories()->sync($request->category_ids);
-            }
-            if ($request->has('social_media_ids')) {
-                $influencer->socialMedias()->sync($request->social_media_ids);
-            }
 
             // user info
             $this->upsertUserInfo($request, $user);
 
             DB::commit();
 
-            return $this->success(['message' => 'Influencer profile completed']);
+
+            return $this->success(['message' => 'Influencer profile completed'
+        ,'influencer' => $influencer]);
         } catch (\Throwable $e) {
             DB::rollBack();
             return $this->fail($e->getMessage());
@@ -229,4 +235,136 @@ class ProfileController extends Controller
         if ($request->filled('is_verified')) $userInfo->is_verified = $request->is_verified;
         $userInfo->save();
     }
+public function addSocialMediaLinks(Request $request)
+{
+    // 1️⃣ Validate input from the request
+    $validated = $request->validate([
+        'social_media_ids' => 'required|array',
+        'social_media_ids.*' => 'exists:social_media,id',
+        'social_media_urls' => 'required|array',
+        'social_media_urls.*' => 'required|max:255',
+    ]);
+
+    // 2️⃣ Get the authenticated user
+    $user = $request->user();
+
+    // 3️⃣ Find the influencer
+    $influencer = Influencer::findOrFail($user->id);
+
+    // 4️⃣ Loop and attach/update links using SocialMeidaOfInfluencer
+    foreach ($validated['social_media_ids'] as $index => $socialMediaId) {
+        $url = $validated['social_media_urls'][$index] ?? null;
+        if ($url) {
+            SocialMeidaOfInfluencer::updateOrCreate(
+                [
+                    'influencer_id' => $influencer->id,
+                    'social_media_id' => $socialMediaId,
+                ],
+                [
+                    'url_of_soical' => $url,
+                ]
+            );
+        }
+    }
+
+    // 5️⃣ Return the response
+    return response()->json([
+        'message' => 'Social media links added/updated successfully.',
+        'social_media_links' => $influencer->socialMediaLinks()->get()
+    ]);
+}
+
+
+public function assignCategories(Request $request)
+{
+    // 1️⃣ Validate input
+    $validated = $request->validate([
+        'category_ids' => 'required|array',
+        'category_ids.*' => 'exists:categories,id',
+    ]);
+
+    // 2️⃣ Get the authenticated user
+    $user = auth()->user();
+    if (!$user) {
+        return response()->json([
+            'message' => 'Unauthenticated.'
+        ], 401);
+    }
+
+    // 3️⃣ Find influencer by user id
+    $influencer = Influencer::find($user->id);
+
+    if (!$influencer) {
+        return response()->json([
+            'message' => 'User is not an influencer.',
+        ], 404);
+    }
+
+    // 4️⃣ Sync categories to pivot table
+    $influencer->categories()->sync($validated['category_ids']);
+
+    // 5️⃣ Return updated categories
+    return response()->json([
+        'message' => 'Categories assigned successfully.',
+        'categories' => $influencer->categories()->get(),
+    ]);
+}
+
+public function getCategoriesByInfluencer(Request $request)
+{
+    // 1️⃣ Validate request parameter
+    $validated = $request->validate([
+        'influencer_id' => 'required|exists:influencers,id',
+    ]);
+
+    // 2️⃣ Get influencer by given ID
+    $influencer = Influencer::find($validated['influencer_id']);
+
+    // 3️⃣ Fetch categories
+    $categories = $influencer->categories()->get();
+
+    // 4️⃣ Return response
+    return response()->json([
+        'message' => 'Categories retrieved successfully.',
+        'categories' => $categories,
+    ]);
+}
+public function getSocialMediaLinksByInfluencer(Request $request)
+{
+    // 1️⃣ Validate the request parameter
+    $validated = $request->validate([
+        'influencer_id' => 'required|exists:influencers,id',
+    ]);
+
+    // 2️⃣ Get the influencer by the given ID
+    $influencer = Influencer::find($validated['influencer_id']);
+
+    // 3️⃣ Fetch social media links
+    $socialMediaLinks = $influencer->socialMediaLinks()->get();
+
+    // 4️⃣ Return response
+    return response()->json([
+        'message' => 'Social media links retrieved successfully.',
+        'social_media_links' => $socialMediaLinks,
+    ]);
+}
+
+    public function updateVerificationStatus(Request $request)
+{
+
+
+
+    $request->validate([
+        'is_verified' => 'required', //no validate have
+    ]);
+
+    // Find or create UserInfo for the authenticated user
+    $userInfo = UserInfo::updateOrCreate(
+        ['user_id' => Auth::id()],
+        ['is_verified' => $request->is_verified]
+    );
+
+    return $this->success($userInfo);
+}
+
 }

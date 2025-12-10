@@ -8,15 +8,15 @@ class Category extends Model
 {
     //  fillable property to allow mass assignment
     protected $fillable = ['name'];
-    //table 
-    protected $table = 'categories';    
+    //table
+    protected $table = 'categories';
 
     // Define relationship to CategoryOfInfluencer model
   //belongsToMany
     public function influencers()
     {
-        return $this->belongsToMany(Influencer::class, 'categories_of_influencers', 'category_id', 'influencer_id');
+        return $this->belongsToMany(Influencer::class, 'category_of_influencers', 'category_id', 'influencer_id');
     }
 
-    
+
 }
