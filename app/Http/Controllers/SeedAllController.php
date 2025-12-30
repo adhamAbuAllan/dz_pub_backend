@@ -255,6 +255,7 @@ public function getAllInfluencers()
 
     ])
     ->whereHas('influencer')
+    ->where('is_active', '!=', -1)
     ->get();
 
     return response()->json([
@@ -291,6 +292,64 @@ public function getInfluencerById(Request $request)
         'status' => true,
         'message' => "Influencer data",
         'data' => $influencer
+    ]);
+}
+public function changeInfluencerStatus(Request $request)
+{
+    // Validate input
+    $request->validate([
+        'id' => 'required|integer|exists:users,id',
+        'is_active' => 'required|integer|in:-1,0,1',
+    ]);
+
+    // Get influencer user
+    $user = User::whereHas('influencer')
+        ->where('id', $request->id)
+        ->first();
+
+    if (!$user) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Influencer not found'
+        ], 404);
+    }
+
+    // Update status
+    $user->is_active = $request->is_active;
+    $user->save();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Influencer status updated successfully',
+        'data' => [
+            'id' => $user->id,
+            'is_active' => $user->is_active
+        ]
+    ]);
+}
+    /* ============================================================
+     * Users
+     * ============================================================ */
+public function getUsers()
+{
+    $users = User::where('type_id', '!=', 3)
+        ->get();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Users data',
+        'data' => $users
+    ]);
+}
+public function getInactiveUsers()
+{
+    $users = User::where('is_active', -1)
+        ->get();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Inactive users',
+        'data' => $users
     ]);
 }
 
