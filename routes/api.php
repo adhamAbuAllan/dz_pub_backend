@@ -87,9 +87,19 @@ Route::get('get/last-promotion-by-influencer', [PromationController::class, 'get
 
 
 Route::prefix('seed')->group(function () {
+    //Reports routes
+    Route::post('/update/report-status', [SeedAllController::class, 'changeReportStatus']);
+    Route::get('/get/reports-by-status', [SeedAllController::class, 'getReportsByStatus']);
+    Route::post('/add/report', [SeedAllController::class, 'addReport']);
+    Route::get('/get/reports', [SeedAllController::class, 'getReports']);
+
     Route::get('/get/users', [SeedAllController::class, 'getUsers']);
     Route::get('/get/inactive-users', [SeedAllController::class, 'getInactiveUsers']);
-    Route::post('update/user-status', [SeedAllController::class, 'changeInfluencerStatus']);
+    Route::post('/update/user-status', [SeedAllController::class, 'changeInfluencerStatus']);
+    Route::get('/get/unverified-users', [SeedAllController::class, 'getUnverifiedUsers']);
+    Route::put('/update/verify', [SeedAllController::class, 'changeUserVerificationStatus']);
+    Route::delete('/delete/user', [SeedAllController::class, 'deleteUser']);
+
 
     Route::get('/add/influencer-type', [SeedAllController::class, 'addInfluencerType']);
     Route::get('/get/influencer-type', [SeedAllController::class, 'allInfluencerTypes']);

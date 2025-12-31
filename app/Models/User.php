@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -66,6 +67,17 @@ class User extends Authenticatable
     }
 
 
+// البلاغات التي قام بها المستخدم
+public function reportsMade()
+{
+    return $this->hasMany(Report::class, 'reporter_id');
+}
+
+// البلاغات الموجهة ضد المستخدم
+public function reportsReceived()
+{
+    return $this->hasMany(Report::class, 'reported_id');
+}
 
 
 

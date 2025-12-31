@@ -16,6 +16,10 @@ use App\Models\SocialMediaPromationType;
 use App\Models\Influencer;
 use App\Models\User;
 use App\Models\CustomPromotion;
+use App\Helpers\ArrayHelper;
+use Illuminate\Support\Facades\DB;
+use App\Models\Report;
+
 
 class SeedAllController extends Controller
 {
@@ -327,18 +331,193 @@ public function changeInfluencerStatus(Request $request)
         ]
     ]);
 }
+
+
+
     /* ============================================================
-     * Users
+     * Report methods
      * ============================================================ */
-public function getUsers()
+    
+
+public function getReportsByStatus(Request $request)
 {
-    $users = User::where('type_id', '!=', 3)
+    $request->validate([
+        'status_id' => 'required|integer|exists:report_statuses,id',
+    ]);
+
+    $reports = Report::with([
+            'status',
+            'reporter.userInfo',
+            'reported.userInfo',
+        ])
+        ->where('report_status_id', $request->status_id)
+        ->latest()
         ->get();
 
     return response()->json([
         'status' => true,
-        'message' => 'Users data',
+        'message' => 'Reports list',
+        'data' => ArrayHelper::clean($reports)
+    ]);
+}
+
+public function changeReportStatus(Request $request)
+{
+    $request->validate([
+        'report_id' => 'required|integer|exists:reports,id',
+        'status_id' => 'required|integer|exists:report_statuses,id',
+    ]);
+
+    $report = Report::find($request->report_id);
+    $report->report_status_id = $request->status_id;
+    $report->save();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Report status updated successfully'
+    ]);
+}
+
+public function addReport(Request $request)
+{
+    $request->validate([
+         'reporter_id' => 'required|integer|exists:users,id',
+        'reported_id' => 'required|integer|exists:users,id',
+        'content' => 'required|string|min:5',
+    ]);
+
+    // Prevent reporting yourself
+    if ($request->reporter_id == $request->reported_id) {
+        return response()->json([
+            'status' => false,
+            'message' => 'You cannot report yourself'
+        ], 400);
+    }
+
+    $report = Report::create([
+        'reporter_id' => $request->reporter_id,
+        'reported_id' => $request->reported_id,
+        'content' => $request->content,
+    ]);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Report submitted successfully',
+        'data' => $report
+    ], 201);
+}
+public function getReports()
+{
+    $reports = Report::with([
+            'reporter.userInfo',
+            'reported.userInfo',
+        ])
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Reports list',
+        'data' => ArrayHelper::clean($reports)
+    ]);
+}
+    /* ============================================================
+     * Users
+     * ============================================================ */
+
+
+    public function deleteUser(Request $request)
+{
+    $request->validate([
+        'user_id' => 'required|integer|exists:users,id',
+    ]);
+
+    DB::transaction(function () use ($request) {
+        $user = User::findOrFail($request->user_id);
+        $user->delete();
+    });
+
+    return response()->json([
+        'status' => true,
+        'message' => 'User permanently deleted'
+    ]);
+}
+
+    public function changeUserVerificationStatus(Request $request)
+{
+    // Validate input
+    $request->validate([
+        'user_id' => 'required|integer|exists:users,id',
+        'is_verified' => 'required|in:yes,no',
+    ]);
+
+    // Get user with userInfo
+    $user = User::with('userInfo')->find($request->user_id);
+
+    if (!$user || !$user->userInfo) {
+        return response()->json([
+            'status' => false,
+            'message' => 'User info not found'
+        ], 404);
+    }
+
+    // Update verification status
+    $user->userInfo->is_verified = $request->is_verified;
+    $user->userInfo->save();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'User verification status updated successfully',
+        'data' => [
+            'user_id' => $user->id,
+            'is_verified' => $user->userInfo->is_verified
+        ]
+    ]);
+}
+
+ public function getUnverifiedUsers(Request $request)
+{
+    $users = User::whereHas('userInfo', function ($query) {
+            $query->where('is_verified', 'no');
+        })
+        ->with('userInfo')
+        ->when($request->filled('type_id'), function ($query) use ($request) {
+            $query->where('type_id', $request->type_id);
+        })
+        ->get();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Unverified users',
         'data' => $users
+    ]);
+}
+
+
+public function getUsers()
+{
+    $users = User::with([
+        'userInfo',
+
+        // Influencer side
+        'influencer',
+        'influencer.categories',
+        'influencer.typeOfInfluencer',
+
+
+        // Client side
+        'client',
+
+
+        // Add ANY other relations here
+    ])
+    ->where('type_id', '!=', 3)
+    ->get();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Users data',
+        'data' => ArrayHelper::clean($users)
     ]);
 }
 public function getInactiveUsers()
